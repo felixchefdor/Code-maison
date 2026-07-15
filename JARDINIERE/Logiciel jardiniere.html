@@ -1,0 +1,1075 @@
+  <!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Pour Android -->
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Pour iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jardiniere">
+<meta name="application-name" content="Jardiniere">
+<meta name="theme-color" content="#1e1e1e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Jardinière Pro V15 - Plan & Végétaux</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="layout">
+        <div id="viewport">
+            <div class="main-view-switcher">
+                <button id="btn-view-2d" class="active" onclick="setMainView('2d')"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M4 9.5h16M9.5 4v16"></path></svg></span><span>Vue 2D</span></button>
+                <button id="btn-view-mixte" onclick="setMainView('mixte')"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="2"></rect><path d="M11.8 5v14"></path></svg></span><span>Mixte</span></button>
+                <button id="btn-view-3d" onclick="setMainView('3d')"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 3.5l7 4v9l-7 4-7-4v-9z"></path><path d="M12 3.5v17M5 7.5l7 4 7-4"></path></svg></span><span>Vue 3D</span></button>
+                <button id="btn-light-panel" onclick="toggleLightPanel()" title="Lumière"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><circle cx="12" cy="12" r="4"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path></svg></span></button>
+            </div>
+                <div id="light-time-control">
+                    <div class="lt-row">
+                    <span class="lt-label">Heure</span>
+                    <input type="range" id="sun-hour-2d" min="0" max="24" step="0.25" value="16" oninput="updateSun2d(this.value)">
+                    <span class="lt-val" id="sun-hour-2d-val">16h</span>
+                    </div>
+                    <div class="lt-row">
+                        <span class="lt-label">Période</span>
+                        <select id="solar-map-period" onchange="updateSolarMapPeriod(this.value)">
+                            <option value="annual">Année entière</option>
+                            <option value="spring">Printemps</option>
+                            <option value="summer">Été</option>
+                            <option value="autumn">Automne</option>
+                            <option value="winter">Hiver</option>
+                        </select>
+                    </div>
+                    <div class="lt-row solar-map-row">
+                        <span class="lt-label">Carte</span>
+                        <div class="solar-map-actions">
+                            <button type="button" id="btn-solar-map" onclick="toggleSolarMap()">Carte d'usage</button>
+                            <button type="button" id="btn-solar-map-visibility" onclick="toggleSolarMapVisibility()" disabled>Afficher</button>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- PLAN 2D PRINCIPAL AVEC ZOOM/PAN -->
+    <div id="modal-2d">
+        <div class="toolbar-2d">
+            <div id="project-name" class="project-name">Projet Balcon Bleu</div>
+            <button id="btn-theme-toggle" class="tool-btn compact btn-tone-muted btn-with-icon theme-toggle" onclick="toggleColorMode()" title="Mode clair extérieur"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.8v2.4M12 18.8v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"></path></svg></span><span id="theme-toggle-label">Clair</span></button>
+            <span class="toolbar-spacer"></span>
+            <button class="tool-btn compact btn-tone-muted btn-with-icon" onclick="undoSegment()" title="Annuler (Ctrl+Z)"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M10 6L4 12l6 6"></path><path d="M5 12h9a6 6 0 0 1 6 6"></path></svg></span></button>
+            <button class="tool-btn compact btn-tone-muted btn-with-icon" onclick="redoSegment()" title="Refaire (Ctrl+Y)"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M14 6l6 6-6 6"></path><path d="M19 12h-9a6 6 0 0 0-6 6"></path></svg></span></button>
+            <button class="tool-btn compact btn-tone-earth btn-with-icon" onclick="clearPlan()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19 9a7 7 0 1 0 2 5"></path><path d="M19 4v5h-5"></path></svg></span><span>Reset</span></button>
+            <button class="tool-btn compact btn-tone-primary btn-with-icon" onclick="saveProjectAsToFile()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M5 4h12l2 2v14H5z"></path><path d="M8 4v6h8V4M9 17h6"></path></svg></span><span>Enregistrer</span></button>
+            <button class="tool-btn compact btn-tone-primary btn-with-icon" onclick="requestLoadProject()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M3 8h7l2 2h9v9H3z"></path><path d="M12 14h7"></path></svg></span><span>Charger</span></button>
+            <div id="collision-banner" class="collision-banner"></div>
+        </div>
+        <button id="btn-close-sketch" onclick="finalizeSketchClosure()">Terminer le contour</button>
+        <div id="sketch-alert"></div>
+        <div id="canvas-container">
+            <div id="render-stage">
+                <div id="pane-2d">
+                    <canvas id="canvas-2d" tabindex="0" class="canvas-no-outline"></canvas>
+                    <div id="compass-2d-popup" style="display:none;position:absolute;bottom:76px;right:14px;z-index:20;background:#1a2030;border:1.5px solid #404a58;border-radius:12px;padding:14px 14px 10px;width:192px;box-shadow:0 6px 24px rgba(0,0,0,0.6);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <span style="color:#c8d8e8;font-size:12px;font-weight:600;letter-spacing:0.02em;">Orientation</span>
+                            <button type="button" onclick="closeCompass2DPopup()" style="background:none;border:none;color:#8ca0b8;cursor:pointer;font-size:18px;line-height:1;padding:0;opacity:0.8;">×</button>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                <span style="color:#9ab0c8;font-size:10px;letter-spacing:0.03em;text-transform:uppercase;">Rotation du balcon</span>
+                                <span id="balcony-orientation-2d-val" style="color:#ffd37a;font-size:11px;font-family:monospace;">0°</span>
+                            </div>
+                            <input type="range" id="balcony-orientation-2d" min="-180" max="180" step="1" value="0" oninput="updateBalconyOrientation2D(this.value, false)" onchange="updateBalconyOrientation2D(this.value, true)" style="width:100%;accent-color:#ffd37a;">
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                <span style="color:#9ab0c8;font-size:10px;letter-spacing:0.03em;text-transform:uppercase;">Rotation de la vue</span>
+                                <span id="view-rotation-2d-val" style="color:#5b8ccc;font-size:11px;font-family:monospace;">0°</span>
+                            </div>
+                            <input type="range" id="view-rotation-2d" min="-180" max="180" step="1" value="0" oninput="updateScreenRotation2D(this.value, false)" onchange="updateScreenRotation2D(this.value, true)" style="width:100%;accent-color:#5b8ccc;">
+                        </div>
+                        <button type="button" onclick="armBalconyBuildingPlacementPick()" style="width:100%;padding:7px 4px;background:#1e2a3a;border:1.5px solid #404a58;border-radius:7px;color:#c8d8e8;font-size:11px;cursor:pointer;text-align:center;">Caler contre une façade</button>
+                    </div>
+                    <div id="compass-2d" style="position:absolute;bottom:14px;right:14px;width:54px;height:54px;pointer-events:auto;cursor:pointer;z-index:10;" onclick="openCompass2DPopup()" title="Orienter la vue 2D">
+                        <svg viewBox="0 0 54 54" width="54" height="54">
+                            <circle cx="27" cy="27" r="24" fill="#1a2030" stroke="#404a58" stroke-width="1.5" opacity="0.88"/>
+                            <g id="compass-2d-needle" transform="rotate(0,27,27)">
+                                <text x="27" y="9" text-anchor="middle" fill="#8ca0b8" font-size="8" font-family="monospace" font-weight="bold">N</text>
+                                <text x="27" y="50" text-anchor="middle" fill="#e08850" font-size="8" font-family="monospace" font-weight="bold">S</text>
+                                <text x="50" y="31" text-anchor="middle" fill="#8ca0b8" font-size="8" font-family="monospace" font-weight="bold">E</text>
+                                <text x="4" y="31" text-anchor="middle" fill="#8ca0b8" font-size="8" font-family="monospace" font-weight="bold">O</text>
+                                <polygon points="27,7 24,27 27,24 30,27" fill="#e05040"/>
+                                <polygon points="27,47 24,27 27,30 30,27" fill="#bbb" opacity="0.7"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div id="solar-map-legend" style="display:none;position:absolute;bottom:80px;left:14px;z-index:10;background:rgba(14,18,28,0.92);border:1px solid rgba(255,255,255,0.10);border-radius:9px;padding:8px 11px;pointer-events:none;backdrop-filter:blur(4px);">
+                        <div style="font-size:9px;color:#6a7e96;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;font-family:monospace;">Ensoleillement</div>
+                        <div style="display:flex;flex-direction:column;gap:5px;">
+                            <div style="display:flex;align-items:center;gap:8px;"><span style="flex:0 0 13px;height:13px;border-radius:3px;background:rgba(229,101,35,0.85);display:inline-block;"></span><span style="font-size:10px;color:#c8d8e8;font-family:sans-serif;">Plein soleil</span></div>
+                            <div style="display:flex;align-items:center;gap:8px;"><span style="flex:0 0 13px;height:13px;border-radius:3px;background:rgba(238,198,73,0.85);display:inline-block;"></span><span style="font-size:10px;color:#c8d8e8;font-family:sans-serif;">Mi-soleil</span></div>
+                            <div style="display:flex;align-items:center;gap:8px;"><span style="flex:0 0 13px;height:13px;border-radius:3px;background:rgba(64,156,189,0.85);display:inline-block;"></span><span style="font-size:10px;color:#c8d8e8;font-family:sans-serif;">Mi-ombre</span></div>
+                            <div style="display:flex;align-items:center;gap:8px;"><span style="flex:0 0 13px;height:13px;border-radius:3px;background:rgba(39,99,186,0.85);display:inline-block;"></span><span style="font-size:10px;color:#c8d8e8;font-family:sans-serif;">Ombre</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="pane-3d"></div>
+                <div id="view-splitter" class="view-splitter"></div>
+            </div>
+            <div class="editor-tabs" id="editor-tabs">
+                <button class="editor-tab" id="tab-balcon" onclick="switchEditor('balcon')" title="Panneau Balcon">
+                    <span class="editor-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" focusable="false">
+                            <!-- trait vertical + horizontal en L -->
+                            <path d="M5 3.5v15M5 18.5h14" fill="none" stroke-width="1.8" stroke-linecap="round"></path>
+                            <!-- noeuds carrés aux 3 extrémités -->
+                            <rect x="3.2" y="1.8" width="3.6" height="3.6" rx="0.5" fill="currentColor"></rect>
+                            <rect x="3.2" y="16.7" width="3.6" height="3.6" rx="0.5" fill="currentColor"></rect>
+                            <rect x="17.2" y="16.7" width="3.6" height="3.6" rx="0.5" fill="currentColor"></rect>
+                            <!-- crayon en diagonale -->
+                            <path d="M10.7 13.9l5.7-5.7 2 2-5.7 5.7-2.9.8z" fill="none" stroke-width="1.5" stroke-linejoin="round"></path>
+                            <path d="M16.3 8.2l2 2" fill="none" stroke-width="1.4" stroke-linecap="round"></path>
+                            <path d="M9.8 16.6l2.9-.8" fill="none" stroke-width="1.4" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span class="editor-tab-label">Balcon</span>
+                </button>
+                <button class="editor-tab" id="tab-jardinieres" onclick="switchEditor('jardinieres')" title="Panneau Jardinières">
+                    <span class="editor-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" focusable="false">
+                            <rect x="3" y="13" width="12" height="4.6" rx="0.9" ry="0.9" fill="none" stroke-width="1.8"></rect>
+                            <path d="M4.6 17.6v3.2M13.4 17.6v3.2" fill="none" stroke-width="1.8" stroke-linecap="round"></path>
+                            <path d="M5 13v-8.4M13 13v-8.4" fill="none" stroke-width="1.8" stroke-linecap="round"></path>
+                            <path d="M5 7h8M5 10h8" fill="none" stroke-width="1.8" stroke-linecap="round"></path>
+                        </svg>
+                    </span>
+                    <span class="editor-tab-label">Jard.</span>
+                </button>
+                <button class="editor-tab" id="tab-devis" onclick="switchEditor('devis')" title="Panneau Chiffrage">
+                    <span class="editor-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" focusable="false">
+                            <path d="M16.5 6.2c-1.3-1.1-2.8-1.6-4.6-1.6-3 0-5.4 2.2-6 5.2h8.6M5.8 14.2h8.8M6 14.2c.6 3 3 5.2 6 5.2 1.8 0 3.3-.6 4.6-1.6" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="editor-tab-label">Prix</span>
+                </button>
+                <button class="editor-tab" id="tab-chantier" onclick="switchEditor('chantier')" title="Panneau Fabrication">
+                    <span class="editor-tab-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" focusable="false">
+                            <g transform="translate(12 12) rotate(-31) translate(-12 -12)">
+                                <rect x="1.7" y="11.2" width="5.4" height="6.1" rx="1.2" fill="none" stroke-width="1.7"></rect>
+                                <rect x="3.2" y="12.6" width="2.1" height="3.2" rx="0.55" fill="none" stroke-width="1.7"></rect>
+                                <path d="M7.1 10.9L19.4 11.8L22.1 15.8L7.1 16.5z" fill="none" stroke-width="1.7" stroke-linejoin="round"></path>
+                                <path d="M22.1 15.8l-1.3 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </g>
+                        </svg>
+                    </span>
+                    <span class="editor-tab-label">Fab.</span>
+                </button>
+            </div>
+            <div class="sidebar-2d">
+                <div class="tool-group balcony-only">
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Mur</div>
+                        <button class="tool-btn active" id="btn-wall" onclick="setTool('wall')" title="Dessiner un mur"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Fenêtre</div>
+                        <button class="tool-btn" id="btn-window" onclick="setTool('window')" title="Dessiner une fenêtre"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Baie</div>
+                        <button class="tool-btn" id="btn-glass" onclick="setTool('glass')" title="Dessiner une baie vitrée"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Garde-corps</div>
+                        <button class="tool-btn" id="btn-rail" onclick="setTool('rail')" title="Dessiner un garde-corps"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Bord nu</div>
+                        <button class="tool-btn" id="btn-bare-edge" onclick="setTool('bare-edge')" title="Dessiner un bord sans mur"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Porte</div>
+                        <button class="tool-btn" id="btn-door" onclick="setTool('door')" title="Dessiner une porte battante"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Plafond</div>
+                        <button class="tool-btn" id="btn-ceiling" onclick="toggleCeilingTool()" title="Afficher ou masquer un plafond"></button>
+                        <input type="checkbox" id="input-ceiling" onchange="updateCeilingEnabled(this.checked)" hidden>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Pilier</div>
+                        <button class="tool-btn" id="btn-post" onclick="setTool('post')" title="Dessiner un pilier plein"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Évac.</div>
+                        <button class="tool-btn" id="btn-drain" onclick="setTool('drain')"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Prise</div>
+                        <button class="tool-btn" id="btn-power" onclick="setTool('power')"></button>
+                    </div>
+                    <div class="tool-wrapper">
+                        <div class="tool-label">Horizon</div>
+                        <button class="tool-btn" id="btn-horizon" onclick="toggleHorizonPanel(true)" title="Importer ou dessiner les masques solaires"></button>
+                    </div>
+                </div>
+                <div class="sidebar-sep"></div>
+                <button class="tool-btn btn-heights" id="btn-heights" onclick="toggleArchPanel()" title="Paramétrages des hauteurs"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M6 6h12M6 12h12M6 18h12"></path><circle cx="9" cy="6" r="1.7" class="solid"></circle><circle cx="15" cy="12" r="1.7" class="solid"></circle><circle cx="11" cy="18" r="1.7" class="solid"></circle></svg></span></button>
+            </div>
+            
+            <!-- PANNEAUX MÉTIER EN 2D -->
+            <div id="devis-panel-2d">
+	                <div class="dp-title"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M16.5 6.2c-1.3-1.1-2.8-1.6-4.6-1.6-3 0-5.4 2.2-6 5.2h8.6M5.8 14.2h8.8M6 14.2c.6 3 3 5.2 6 5.2 1.8 0 3.3-.6 4.6-1.6"></path></svg></span><span>Chiffrage</span></div>
+	                <div class="dp-section">Prix</div>
+	                <div class="dp-help">Les quantités viennent de Fabrication. Ici, on renseigne uniquement les prix unitaires et on génère le devis.</div>
+	                <button class="jp-add-btn btn-with-icon" onclick="generateDevisPDF()" style="width:100%;"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M15 3.5v3h3M8.5 14h7M8.5 17h7"></path></svg></span><span>Télécharger devis PDF</span></button>
+	                <button class="jp-add-btn btn-with-icon" onclick="openDevisSpreadsheetModal()" style="width:100%;"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"></rect><path d="M3.5 9.5h17M8.5 4.5v15M14.5 4.5v15M3.5 14.5h17"></path></svg></span><span>Tableau plein écran</span></button>
+	                <div id="devis-form"></div>
+	            </div>
+            <div id="chantier-panel-2d">
+                <div class="dp-title"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><g transform="translate(12 12) rotate(-31) translate(-12 -12)"><rect x="1.7" y="11.2" width="5.4" height="6.1" rx="1.2"></rect><rect x="3.2" y="12.6" width="2.1" height="3.2" rx="0.55"></rect><path d="M7.1 10.9L19.4 11.8L22.1 15.8L7.1 16.5z"></path><path d="M22.1 15.8l-1.3 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1-1.2-1.1-1.2 1.1"></path></g></svg></span><span>Fabrication</span></div>
+                <button class="jp-add-btn btn-with-icon" onclick="generateChantierPDF()" style="width:100%;"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M15 3.5v3h3M8.5 14h7M8.5 17h7"></path></svg></span><span>PDF fabrication</span></button>
+                <div id="fabrication-form"></div>
+                <div class="dp-section">Stock atelier</div>
+                <div class="dp-help">Pièces disponibles à l'atelier par profil. Le plan de coupe les utilise en priorité et calcule les achats supplémentaires si le stock est insuffisant.</div>
+                <div id="stock-atelier-panel" style="font-size:0.67em;color:#ddd;display:flex;flex-direction:column;gap:5px;"></div>
+                <div class="dp-section">Documents atelier</div>
+                <button class="jp-add-btn btn-with-icon" onclick="exportFullWorkshopCsv()" style="width:100%;"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M9 12h6M9 15h6M9 18h4"></path></svg></span><span>CSV atelier complet</span></button>
+                <div class="dp-help">Le PDF comprend: checklist, plans, guide assemblage, conseils sécurité.</div>
+                <div class="dp-section">Plans techniques et perçages</div>
+                <div class="dp-help">Vue d'ensemble, plan par type de pièce et tableau de perçages.</div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:0.68em;color:#aaa;min-width:64px;">Cible</span>
+                    <select id="chantier-tech-jard-select" class="plant-select" style="font-size:0.74em;" onchange="updateChantierTechTarget(this.value)"></select>
+                </div>
+                <div id="chantier-tech-live" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+                    <div style="padding:6px;border:1px solid #2f2f2f;border-radius:6px;background:#121212;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+                            <div style="font-size:0.72em;color:#f0dcc1;font-weight:600;">Plan d'ensemble (façade)</div>
+                            <button class="jp-btn" style="font-size:0.68em;padding:3px 7px;" onclick="openTechPlanModal('assembly')">Agrandir</button>
+                        </div>
+                        <div id="chantier-tech-assembly" title="Cliquer pour agrandir" onclick="openTechPlanModal('assembly')" style="border:1px solid #252525;border-radius:4px;background:#0c0c0c;min-height:120px;cursor:zoom-in;"></div>
+                    </div>
+                    <div style="padding:6px;border:1px solid #2f2f2f;border-radius:6px;background:#121212;">
+                        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                            <span style="font-size:0.72em;color:#f0dcc1;font-weight:600;">Plan par type</span>
+                            <select id="chantier-tech-type-select" class="plant-select" style="font-size:0.72em;flex:1;" onchange="updateChantierTechType(this.value)"></select>
+                            <button class="jp-btn" style="font-size:0.68em;padding:3px 7px;flex:0 0 auto;" onclick="openTechPlanModal('piece')">Agrandir</button>
+                        </div>
+                        <div id="chantier-tech-piece" title="Cliquer pour agrandir" onclick="openTechPlanModal('piece')" style="border:1px solid #252525;border-radius:4px;background:#0c0c0c;min-height:120px;cursor:zoom-in;"></div>
+                    </div>
+                    <div style="padding:6px;border:1px solid #2f2f2f;border-radius:6px;background:#121212;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+                            <div style="font-size:0.72em;color:#f0dcc1;font-weight:600;">Table perçages</div>
+                            <button class="jp-btn" style="font-size:0.68em;padding:3px 7px;" onclick="exportChantierDrillCsv()">CSV perçages</button>
+                        </div>
+                        <div id="chantier-tech-drills" style="font-size:0.67em;color:#ddd;line-height:1.25;"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="jard-panel-2d">
+                <div class="jp-title">AMENAGEMENT D'ESPACE <span class="jp-close" onclick="deselect2dJardiniere()" title="Désélectionner">✕</span></div>
+                <div class="jp-section">OBJETS</div>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelect2dJardiniere()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><rect x="5" y="10" width="12" height="6" rx="1"></rect><path d="M7 16v3M15 16v3M19 7v6M16 10h6"></path></svg></span><span>Nouvelle jardinière</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectBench()"><span>Nouveau banc</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectPottedTree()"><span>Arbre en pot</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectCubeTest()"><span>Méridienne</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectTable()"><span>Table</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectChair()"><span>Chaise</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectHangingPlanter()"><span>Jardinière garde-corps</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectRailShelf()"><span>Tablette garde-corps</span></button>
+                <button class="jp-add-btn btn-with-icon" onclick="addAndSelectCompressionShelf()"><span>Étagère claustra</span></button>
+                <button id="btn-corner-arrangement-tool" class="jp-add-btn btn-with-icon layout-advisor-btn" onclick="startCornerArrangementTool()"><span>Aménager un angle</span></button>
+                <div id="corner-arrangement-results" class="layout-advisor-results"></div>
+                <div class="jp-section">Conseil</div>
+                <button id="btn-layout-advisor" class="jp-add-btn btn-with-icon layout-advisor-btn" onclick="runLayoutAdvisor()" aria-expanded="false"><span>Conseiller l'aménagement</span></button>
+                <div id="layout-advisor-results" class="layout-advisor-results"></div>
+                <div id="calculation-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Calcul</div>
+                    <div class="jp-row">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.72em;color:#ddd;font-weight:700;"><input type="checkbox" id="placement-include-quote-2d" onchange="updateSelectedConstructionCalculationInclusion(this.checked)"> <span id="placement-include-label-2d">Inclure devis/fabrication</span></label>
+                    </div>
+                </div>
+                <div id="potted-tree-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Arbre en pot</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Diam.</span>
+                        <input id="tree-diameter-2d" type="range" min="35" max="120" step="5" value="50" oninput="update2dPottedTreeDiameter(this.value/10, false)" onchange="update2dPottedTreeDiameter(this.value/10, true)" class="dim-range">
+                        <span id="tree-diameter-2d-val" class="dim-value">50 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Âge</span>
+                        <input id="tree-age-2d" type="range" min="1" max="12" step="1" value="5" oninput="update2dPottedTreeAge(this.value, false)" onchange="update2dPottedTreeAge(this.value, true)" class="dim-range">
+                        <span id="tree-age-2d-val" class="dim-value">5 ans</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Forme</span>
+                        <select id="tree-shape-2d" class="plant-select" onchange="update2dPottedTreeShape(this.value)">
+                            <option value="round">Ronde</option>
+                            <option value="square">Carrée</option>
+                        </select>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dPottedTree()">Supprimer arbre</button>
+                </div>
+                <div id="table-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Table</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="table-w-2d" type="range" min="55" max="160" step="5" value="80" oninput="update2dTableDimension('w', this.value/10, false)" onchange="update2dTableDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="table-w-2d-val" class="dim-value">80 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Larg.</span>
+                        <input id="table-d-2d" type="range" min="55" max="140" step="5" value="80" oninput="update2dTableDimension('d', this.value/10, false)" onchange="update2dTableDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="table-d-2d-val" class="dim-value">80 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="table-h-2d" type="range" min="55" max="95" step="5" value="74" oninput="update2dTableDimension('h', this.value/10, false)" onchange="update2dTableDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="table-h-2d-val" class="dim-value">74 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Rot.</span>
+                        <input id="table-rot-2d" type="range" min="-180" max="180" step="5" value="0" oninput="update2dTableRotation(this.value, false)" onchange="update2dTableRotation(this.value, true)" class="dim-range">
+                        <span id="table-rot-2d-val" class="dim-value">0°</span>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dTable()">Supprimer table</button>
+                </div>
+                <div id="chair-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Chaise</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="chair-w-2d" type="range" min="38" max="70" step="2" value="46" oninput="update2dChairDimension('w', this.value/10, false)" onchange="update2dChairDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="chair-w-2d-val" class="dim-value">46 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Prof.</span>
+                        <input id="chair-d-2d" type="range" min="40" max="75" step="2" value="52" oninput="update2dChairDimension('d', this.value/10, false)" onchange="update2dChairDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="chair-d-2d-val" class="dim-value">52 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="chair-h-2d" type="range" min="70" max="105" step="5" value="85" oninput="update2dChairDimension('h', this.value/10, false)" onchange="update2dChairDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="chair-h-2d-val" class="dim-value">85 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Rot.</span>
+                        <input id="chair-rot-2d" type="range" min="-180" max="180" step="5" value="0" oninput="update2dChairRotation(this.value, false)" onchange="update2dChairRotation(this.value, true)" class="dim-range">
+                        <span id="chair-rot-2d-val" class="dim-value">0°</span>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dChair()">Supprimer chaise</button>
+                </div>
+                <div id="hanging-planter-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Jardinière garde-corps</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="hanging-planter-w-2d" type="range" min="60" max="200" step="5" value="120" oninput="update2dHangingPlanterDimension('w', this.value/10, false)" onchange="update2dHangingPlanterDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="hanging-planter-w-2d-val" class="dim-value">120 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Prof.</span>
+                        <input id="hanging-planter-d-2d" type="range" min="22" max="50" step="1" value="32" oninput="update2dHangingPlanterDimension('d', this.value/10, false)" onchange="update2dHangingPlanterDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="hanging-planter-d-2d-val" class="dim-value">32 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="hanging-planter-h-2d" type="range" min="70" max="110" step="5" value="86" oninput="update2dHangingPlanterDimension('h', this.value/10, false)" onchange="update2dHangingPlanterDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="hanging-planter-h-2d-val" class="dim-value">86 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Équerre</span>
+                        <select id="hanging-planter-bracket-2d" class="plant-select" onchange="update2dHangingPlanterBracketType(this.value)">
+                            <option value="steel">Acier</option>
+                            <option value="wood">Bois</option>
+                        </select>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dHangingPlanter()">Supprimer jardinière garde-corps</button>
+                </div>
+                <div id="rail-shelf-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Tablette garde-corps</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="rail-shelf-w-2d" type="range" min="50" max="160" step="5" value="100" oninput="update2dRailShelfDimension('w', this.value/10, false)" onchange="update2dRailShelfDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="rail-shelf-w-2d-val" class="dim-value">100 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Prof.</span>
+                        <input id="rail-shelf-d-2d" type="range" min="30" max="70" step="2" value="52" oninput="update2dRailShelfDimension('d', this.value/10, false)" onchange="update2dRailShelfDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="rail-shelf-d-2d-val" class="dim-value">52 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="rail-shelf-h-2d" type="range" min="70" max="110" step="5" value="86" oninput="update2dRailShelfDimension('h', this.value/10, false)" onchange="update2dRailShelfDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="rail-shelf-h-2d-val" class="dim-value">86 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Équerre</span>
+                        <select id="rail-shelf-bracket-2d" class="plant-select" onchange="update2dRailShelfBracketType(this.value)">
+                            <option value="steel">Acier</option>
+                            <option value="wood">Bois</option>
+                        </select>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dRailShelf()">Supprimer tablette</button>
+                </div>
+                <div id="cube-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Méridienne bois</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="cube-w-2d" type="range" min="100" max="260" step="5" value="190" oninput="update2dCubeDimension('w', this.value/10, false)" onchange="update2dCubeDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="cube-w-2d-val" class="dim-value">190 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Larg.</span>
+                        <input id="cube-d-2d" type="range" min="55" max="110" step="5" value="80" oninput="update2dCubeDimension('d', this.value/10, false)" onchange="update2dCubeDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="cube-d-2d-val" class="dim-value">80 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="cube-h-2d" type="range" min="45" max="95" step="5" value="72" oninput="update2dCubeDimension('h', this.value/10, false)" onchange="update2dCubeDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="cube-h-2d-val" class="dim-value">72 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Couleur</span>
+                        <div class="color-popover-wrap">
+                            <button class="color-chip-btn" id="cube-color-toggle-2d" type="button" onclick="toggleColorPopover('cube-color-popover-2d')" title="Couleur méridienne"></button>
+                            <div class="color-popover" id="cube-color-popover-2d">
+                                <input type="color" id="cube-color-2d" value="#b9793f" oninput="update2dCubeColor(this.value, false)" onchange="update2dCubeColor(this.value, true)">
+                                <div class="wood-palette" id="cube-palette-2d">
+                                    <button class="wood-swatch" type="button" title="Bleu noir ardoise" style="background:#1f2a2d" onclick="setCubeColorPreset('#1f2a2d')"></button>
+                                    <button class="wood-swatch" type="button" title="Rouge ocre" style="background:#8f3d2d" onclick="setCubeColorPreset('#8f3d2d')"></button>
+                                    <button class="wood-swatch" type="button" title="Jaune ocre" style="background:#c49a45" onclick="setCubeColorPreset('#c49a45')"></button>
+                                    <button class="wood-swatch" type="button" title="Vert sauge" style="background:#6f7f63" onclick="setCubeColorPreset('#6f7f63')"></button>
+                                    <button class="wood-swatch" type="button" title="Brun terre" style="background:#6a4b38" onclick="setCubeColorPreset('#6a4b38')"></button>
+                                    <button class="wood-swatch" type="button" title="Gris lichen" style="background:#8a8d7b" onclick="setCubeColorPreset('#8a8d7b')"></button>
+                                    <button class="wood-swatch" type="button" title="Terre cuite douce" style="background:#a76045" onclick="setCubeColorPreset('#a76045')"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="jp-row">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.72em;color:#ddd;font-weight:700;"><input type="checkbox" id="meridienne-arm-back-2d" onchange="updateMeridienneOption('armBack', this.checked)"> Accoudoir arrière</label>
+                    </div>
+                    <div class="jp-row">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.72em;color:#ddd;font-weight:700;"><input type="checkbox" id="meridienne-arm-side-2d" onchange="updateMeridienneOption('armSide', this.checked)"> Accoudoir côté</label>
+                    </div>
+                    <div class="jp-row">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.72em;color:#ddd;font-weight:700;"><input type="checkbox" id="meridienne-mattress-2d" onchange="updateMeridienneOption('mattress', this.checked)"> Matelas extérieur</label>
+                    </div>
+                    <div class="jp-row">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.72em;color:#ddd;font-weight:700;"><input type="checkbox" id="meridienne-cushions-2d" onchange="updateMeridienneOption('cushions', this.checked)"> Coussins cocoon</label>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Matelas</span>
+                        <select id="meridienne-mattress-color-2d" class="plant-select" onchange="updateMeridienneOption('mattressColor', this.value)">
+                            <option value="#d8d1bd">Lin clair</option>
+                            <option value="#5f7f72">Vert sauge</option>
+                            <option value="#2f4958">Bleu ardoise</option>
+                            <option value="#b56f4b">Terracotta</option>
+                            <option value="#3d3d3b">Graphite</option>
+                        </select>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Coussins</span>
+                        <select id="meridienne-cushion-color-2d" class="plant-select" onchange="updateMeridienneOption('cushionColor', this.value)">
+                            <option value="#c8bfa8">Lin sable</option>
+                            <option value="#8f3f2d">Rouille</option>
+                            <option value="#caa54c">Ocre</option>
+                            <option value="#6f7f62">Vert olive</option>
+                            <option value="#e6e2d6">Écru</option>
+                        </select>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dCube()">Supprimer méridienne</button>
+                </div>
+                <div id="compression-shelf-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Étagère claustra</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="compression-shelf-w-2d" type="range" min="80" max="400" step="5" value="180" oninput="update2dCompressionShelfDimension('w', this.value/10, false)" onchange="update2dCompressionShelfDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="compression-shelf-w-2d-val" class="dim-value">180 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Larg. planche</span>
+                        <input id="compression-shelf-d-2d" type="range" min="9" max="30" step="0.5" value="14.5" oninput="update2dCompressionShelfDimension('d', this.value/10, false)" onchange="update2dCompressionShelfDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="compression-shelf-d-2d-val" class="dim-value">14,5 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="compression-shelf-h-2d" type="range" min="200" max="300" step="5" value="250" oninput="update2dCompressionShelfDimension('h', this.value/10, false)" onchange="update2dCompressionShelfDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="compression-shelf-h-2d-val" class="dim-value">250 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Tablettes</span>
+                        <input id="compression-shelf-count-2d" type="range" min="2" max="4" step="1" value="4" oninput="update2dCompressionShelfShelves(this.value, false)" onchange="update2dCompressionShelfShelves(this.value, true)" class="dim-range">
+                        <span id="compression-shelf-count-2d-val" class="dim-value">4 tablettes</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Rot.</span>
+                        <input id="compression-shelf-rot-2d" type="range" min="-180" max="180" step="5" value="0" oninput="update2dCompressionShelfRotation(this.value, false)" onchange="update2dCompressionShelfRotation(this.value, true)" class="dim-range">
+                        <span id="compression-shelf-rot-2d-val" class="dim-value">0°</span>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dCompressionShelf()">Supprimer étagère</button>
+                </div>
+                <div id="corner-fill-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Comble-angle</div>
+                    <div id="corner-fill-auto-controls-2d" style="display:none;">
+                        <div class="jp-row">
+                            <button class="jp-btn" onclick="cycleSelectedCornerArrangementModel(-1)">←</button>
+                            <div class="dim-value" id="corner-fill-model-2d-val" style="flex:1;text-align:center;">Comble-angle</div>
+                            <button class="jp-btn" onclick="cycleSelectedCornerArrangementModel(1)">→</button>
+                        </div>
+                        <div class="jp-row">
+                            <label class="dim-label" for="corner-fill-enabled-a-2d">BA</label>
+                            <input id="corner-fill-enabled-a-2d" type="checkbox" checked onchange="updateCornerArrangementDimension2d('enabledA', this.checked, true)">
+                            <span class="dim-value">suivre</span>
+                        </div>
+                        <div class="jp-row">
+                            <span class="dim-label">BA long.</span>
+                            <input id="corner-fill-len-a-2d" type="range" min="40" max="260" step="5" value="85" oninput="updateCornerArrangementDimension2d('lenA', this.value, false)" onchange="updateCornerArrangementDimension2d('lenA', this.value, true)" class="dim-range">
+                            <span id="corner-fill-len-a-2d-val" class="dim-value">85 cm</span>
+                        </div>
+                        <div class="jp-row">
+                            <span class="dim-label">BA larg.</span>
+                            <input id="corner-fill-depth-a-2d" type="range" min="25" max="120" step="5" value="55" oninput="updateCornerArrangementDimension2d('depthA', this.value, false)" onchange="updateCornerArrangementDimension2d('depthA', this.value, true)" class="dim-range">
+                            <span id="corner-fill-depth-a-2d-val" class="dim-value">55 cm</span>
+                        </div>
+                        <div class="jp-row">
+                            <label class="dim-label" for="corner-fill-enabled-b-2d">BC</label>
+                            <input id="corner-fill-enabled-b-2d" type="checkbox" checked onchange="updateCornerArrangementDimension2d('enabledB', this.checked, true)">
+                            <span class="dim-value">suivre</span>
+                        </div>
+                        <div class="jp-row">
+                            <span class="dim-label">BC long.</span>
+                            <input id="corner-fill-len-b-2d" type="range" min="40" max="260" step="5" value="85" oninput="updateCornerArrangementDimension2d('lenB', this.value, false)" onchange="updateCornerArrangementDimension2d('lenB', this.value, true)" class="dim-range">
+                            <span id="corner-fill-len-b-2d-val" class="dim-value">85 cm</span>
+                        </div>
+                        <div class="jp-row">
+                            <span class="dim-label">BC larg.</span>
+                            <input id="corner-fill-depth-b-2d" type="range" min="25" max="120" step="5" value="55" oninput="updateCornerArrangementDimension2d('depthB', this.value, false)" onchange="updateCornerArrangementDimension2d('depthB', this.value, true)" class="dim-range">
+                            <span id="corner-fill-depth-b-2d-val" class="dim-value">55 cm</span>
+                        </div>
+                        <div class="jp-sep"></div>
+                    </div>
+                    <div class="jp-row" id="corner-fill-manual-w-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="corner-fill-w-2d" type="range" min="40" max="180" step="5" value="80" oninput="update2dCornerFillDimension('w', this.value/10, false)" onchange="update2dCornerFillDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="corner-fill-w-2d-val" class="dim-value">80 cm</span>
+                    </div>
+                    <div class="jp-row" id="corner-fill-manual-d-row">
+                        <span class="dim-label">Prof.</span>
+                        <input id="corner-fill-d-2d" type="range" min="30" max="120" step="5" value="55" oninput="update2dCornerFillDimension('d', this.value/10, false)" onchange="update2dCornerFillDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="corner-fill-d-2d-val" class="dim-value">55 cm</span>
+                    </div>
+                    <div class="jp-row" id="corner-fill-manual-angle-row">
+                        <span class="dim-label">Biais</span>
+                        <input id="corner-fill-angle-2d" type="range" min="45" max="135" step="1" value="75" oninput="update2dCornerFillAngle(this.value, false)" onchange="update2dCornerFillAngle(this.value, true)" class="dim-range">
+                        <span id="corner-fill-angle-2d-val" class="dim-value">75°</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="corner-fill-h-2d" type="range" min="25" max="95" step="5" value="55" oninput="update2dCornerFillDimension('h', this.value/10, false)" onchange="update2dCornerFillDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="corner-fill-h-2d-val" class="dim-value">55 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Couleur</span>
+                        <div class="color-popover-wrap">
+                            <button class="color-chip-btn" id="corner-fill-color-toggle-2d" type="button" onclick="toggleColorPopover('corner-fill-color-popover-2d')" title="Couleur comble-angle"></button>
+                            <div class="color-popover" id="corner-fill-color-popover-2d">
+                                <input type="color" id="corner-fill-color-2d" value="#6a4b38" oninput="update2dCornerFillColor(this.value, false)" onchange="update2dCornerFillColor(this.value, true)">
+                                <div class="wood-palette" id="corner-fill-palette-2d">
+                                    <button class="wood-swatch" type="button" title="Bleu noir ardoise" style="background:#1f2a2d" onclick="setCornerFillColorPreset('#1f2a2d')"></button>
+                                    <button class="wood-swatch" type="button" title="Rouge ocre" style="background:#8f3d2d" onclick="setCornerFillColorPreset('#8f3d2d')"></button>
+                                    <button class="wood-swatch" type="button" title="Jaune ocre" style="background:#c49a45" onclick="setCornerFillColorPreset('#c49a45')"></button>
+                                    <button class="wood-swatch" type="button" title="Vert sauge" style="background:#6f7f63" onclick="setCornerFillColorPreset('#6f7f63')"></button>
+                                    <button class="wood-swatch" type="button" title="Brun terre" style="background:#6a4b38" onclick="setCornerFillColorPreset('#6a4b38')"></button>
+                                    <button class="wood-swatch" type="button" title="Gris lichen" style="background:#8a8d7b" onclick="setCornerFillColorPreset('#8a8d7b')"></button>
+                                    <button class="wood-swatch" type="button" title="Terre cuite douce" style="background:#a76045" onclick="setCornerFillColorPreset('#a76045')"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dCornerFill()">Supprimer comble-angle</button>
+                </div>
+                <div id="bench-controls-2d" style="display:none;">
+                    <div class="jp-sep"></div>
+                    <div class="jp-section">Banc simple</div>
+                    <div class="jp-row">
+                        <span class="dim-label">Long.</span>
+                        <input id="bench-w-2d" type="range" min="80" max="220" step="5" value="150" oninput="update2dBenchDimension('w', this.value/10, false)" onchange="update2dBenchDimension('w', this.value/10, true)" class="dim-range">
+                        <span id="bench-w-2d-val" class="dim-value">150 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Larg.</span>
+                        <input id="bench-d-2d" type="range" min="25" max="70" step="0.5" value="38.5" oninput="update2dBenchDimension('d', this.value/10, false)" onchange="update2dBenchDimension('d', this.value/10, true)" class="dim-range">
+                        <span id="bench-d-2d-val" class="dim-value">38,5 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Haut.</span>
+                        <input id="bench-h-2d" type="range" min="30" max="65" step="5" value="50" oninput="update2dBenchDimension('h', this.value/10, false)" onchange="update2dBenchDimension('h', this.value/10, true)" class="dim-range">
+                        <span id="bench-h-2d-val" class="dim-value">50 cm</span>
+                    </div>
+                    <div class="jp-row">
+                        <span class="dim-label">Rot.</span>
+                        <input id="bench-rot-2d" type="range" min="-180" max="180" step="5" value="0" oninput="update2dBenchRotation(this.value, false)" onchange="update2dBenchRotation(this.value, true)" class="dim-range">
+                        <span id="bench-rot-2d-val" class="dim-value">0°</span>
+                    </div>
+                    <button class="jp-btn btn-positive" onclick="duplicateSelectedPlacementObject()">Dupliquer</button>
+                    <button class="jp-btn" onclick="delete2dBench()">Supprimer banc</button>
+                </div>
+                <div class="jp-sep"></div>
+                <div class="jp-section" id="jard-no-select">Sélectionnez un objet dans le plan pour l'éditer</div>
+                <div id="jard-controls-2d">
+                <div class="jp-sep"></div>
+                <div class="jp-section">Dimensions</div>
+                <div class="jp-row">
+                    <span class="dim-label">Long.</span>
+                    <input id="jard-w-2d" type="range" min="80" max="250" step="10" value="140" oninput="update2dJardDimension('w', this.value/10, false)" onchange="update2dJardDimension('w', this.value/10, true)" class="dim-range">
+                    <span id="jard-w-2d-val" class="dim-value">140,0 cm</span>
+                </div>
+                <div class="jp-row">
+                    <span class="dim-label">Larg.</span>
+                    <input id="jard-d-2d" type="range" min="40" max="100" step="10" value="50" oninput="update2dJardDimension('d', this.value/10, false)" onchange="update2dJardDimension('d', this.value/10, true)" class="dim-range">
+                    <span id="jard-d-2d-val" class="dim-value">50,0 cm</span>
+                </div>
+                <div class="jp-row">
+                    <span class="dim-label">Prof. bac</span>
+                    <input id="jard-cuve-h-2d" type="range" min="14.5" max="74.5" step="15" value="29.5" oninput="update2dJardCuveDepth(this.value/10, false)" onchange="update2dJardCuveDepth(this.value/10, true)" class="dim-range">
+                    <span id="jard-cuve-h-2d-val" class="dim-value">29,5 cm</span>
+                </div>
+                <div class="jp-row">
+                    <span class="dim-label">H. haut</span>
+                    <input id="jard-top-h-2d" type="range" min="40" max="140" step="5" value="55" oninput="update2dJardTopHeight(this.value/10, false)" onchange="update2dJardTopHeight(this.value/10, true)" class="dim-range">
+                    <span id="jard-top-h-2d-val" class="dim-value">55,0 cm</span>
+                </div>
+                <div class="jp-sep"></div>
+                <div class="jp-section">Teinte du bois</div>
+                <div class="jp-row">
+                    <span class="dim-label">Couleur</span>
+                    <div class="color-popover-wrap">
+                        <button class="color-chip-btn" id="wood-color-toggle-2d" type="button" onclick="toggleColorPopover('wood-color-popover-2d')" title="Couleur du bois"></button>
+                        <div class="color-popover" id="wood-color-popover-2d">
+                            <input type="color" id="wood-color-2d" value="#4a3228" oninput="updateWoodColor2d(this.value, false)" onchange="updateWoodColor2d(this.value, true)">
+                            <div class="wood-palette" id="wood-palette-2d">
+                                <button class="wood-swatch" type="button" title="Bleu noir ardoise" style="background:#1f2a2d" onclick="setWoodColorPreset('#1f2a2d')"></button>
+                                <button class="wood-swatch" type="button" title="Rouge ocre" style="background:#8f3d2d" onclick="setWoodColorPreset('#8f3d2d')"></button>
+                                <button class="wood-swatch" type="button" title="Jaune ocre" style="background:#c49a45" onclick="setWoodColorPreset('#c49a45')"></button>
+                                <button class="wood-swatch" type="button" title="Vert sauge" style="background:#6f7f63" onclick="setWoodColorPreset('#6f7f63')"></button>
+                                <button class="wood-swatch" type="button" title="Brun terre" style="background:#6a4b38" onclick="setWoodColorPreset('#6a4b38')"></button>
+                                <button class="wood-swatch" type="button" title="Gris lichen" style="background:#8a8d7b" onclick="setWoodColorPreset('#8a8d7b')"></button>
+                                <button class="wood-swatch" type="button" title="Terre cuite douce" style="background:#a76045" onclick="setWoodColorPreset('#a76045')"></button>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="muted-small">bac &amp; pieds</span>
+                </div>
+                <div class="jp-sep"></div>
+                <div class="jp-section">Treillis</div>
+                <div class="jp-row">
+                    <button class="jp-btn" id="btn-trl-back" onclick="toggleTreillis2d('back')">↑ Arrière</button>
+                </div>
+                <div class="jp-row">
+                    <button class="jp-btn" id="btn-trl-left" onclick="toggleTreillis2d('left')">← Gauche</button>
+                    <button class="jp-btn" id="btn-trl-right" onclick="toggleTreillis2d('right')">Droite →</button>
+                </div>
+                <div class="jp-row">
+                    <span class="dim-label">H. treillis</span>
+                    <input id="jard-treillis-h-2d" type="range" min="60" max="220" step="5" value="130" oninput="update2dTreillisHeight(this.value/10, false)" onchange="update2dTreillisHeight(this.value/10, true)" class="dim-range">
+                    <span id="jard-treillis-h-2d-val" class="dim-value">130,0 cm</span>
+                </div>
+                <div class="jp-row">
+                    <span class="dim-label">Type</span>
+                    <select id="jard-treillis-type-2d" class="plant-select" onchange="update2dTreillisType(this.value)">
+                        <option value="metal">Métal</option>
+                        <option value="bambou">Bambou</option>
+                        <option value="noisetier">Noisetier</option>
+                    </select>
+                </div>
+                <div class="jp-row">
+                    <button class="jp-btn btn-with-icon" id="btn-trl-spots" onclick="toggleTreillisSpots2d()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M9 15.5h6M10 18.5h4"></path><path d="M12 4.5a5 5 0 0 1 3 9l-1 1.3h-4l-1-1.3a5 5 0 0 1 3-9z"></path></svg></span><span>Lumière spot</span></button>
+                </div>
+                <div class="jp-row">
+                    <button class="jp-btn" id="btn-trl-white-garland" onclick="toggleTreillisWhiteGarland2d()">Guirlande blanche</button>
+                    <button class="jp-btn" id="btn-trl-ginguette" onclick="toggleTreillisGinguette2d()">Guirlande ginguette</button>
+                </div>
+                <div class="jp-section">Guirlandes sur piquets</div>
+                <button class="jp-add-btn" id="btn-add-garland-post" onclick="startGarlandPostPlacement()">Rajouter un piquet pour guirlande</button>
+                <button class="jp-add-btn" id="btn-link-garland" onclick="startGarlandLinkPlacement()">Relier une guirlande</button>
+                <div class="plants-empty" id="garland-tool-hint">Aimantation sur les angles arrière intérieurs.</div>
+                <div id="garland-links-list-2d" class="jard-list"></div>
+                <div class="jp-row">
+                    <button class="jp-btn" id="btn-birdhouse" onclick="toggleBirdhouse2d()">Cabane à oiseau</button>
+                </div>
+                <div class="jp-section">Couches visibles</div>
+                <div class="jp-row">
+                    <button class="jp-btn" onclick="stepJardLayerView(-1)">←</button>
+                    <div class="dim-value" id="jard-layer-view-label" style="flex:1;text-align:center;">Paillage</div>
+                    <button class="jp-btn" onclick="stepJardLayerView(1)">→</button>
+                </div>
+                <div class="jp-row">
+                    <button class="jp-btn btn-positive" id="btn-dup-jard-2d" onclick="duplicate2dJardiniere()">Dupliquer</button>
+                    <button class="jp-btn btn-danger" id="btn-del-jard-2d" onclick="delete2dJardiniere()">Supprimer</button>
+                </div>
+                <div class="jp-sep"></div>
+                <div class="jp-section">Végétaux</div>
+                <select id="jard-plant-type-2d" class="plant-select"></select>
+                <button class="jp-add-btn btn-with-icon" onclick="addPlantTo2dJard()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 20v-7"></path><path d="M12 13c0-3.2 2.4-5.6 5.8-5.8-.2 3.4-2.6 5.8-5.8 5.8z"></path><path d="M12 15.2c0-2.7-2-4.8-4.9-5 .2 2.9 2.2 5 4.9 5z"></path></svg></span><span>Planter</span></button>
+                <div id="jard-plants-list-2d" class="plants-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="horizon-draw-view" aria-hidden="true">
+            <div class="horizon-draw-topbar">
+                <div class="horizon-draw-title">Masque solaire — ← → pour pivoter, Échap pour quitter l'outil</div>
+                <button type="button" id="btn-horizon-trace" onclick="toggleHorizonTraceMode()">Tracer</button>
+                <button type="button" onclick="toggleHorizonPanel(true)">Réglages</button>
+                <button type="button" onclick="closeHorizonDrawView()">Fermer</button>
+            </div>
+            <div class="horizon-draw-stage">
+                <video id="horizon-camera-video" autoplay playsinline muted></video>
+                <canvas id="horizon-draw-canvas"></canvas>
+            </div>
+        </div>
+
+        <div id="horizon-panel-2d">
+            <div class="horizon-title">
+                <span>Ligne d'horizon</span>
+                <button class="horizon-close" type="button" onclick="toggleHorizonPanel(false)">×</button>
+            </div>
+            <div class="horizon-help">Importe une adresse pour placer les immeubles et l'horizon naturel, ou trace une silhouette manuelle.</div>
+            <div class="horizon-row">
+                <label for="horizon-eye-input">Hauteur œil</label>
+                <input id="horizon-eye-input" type="number" min="0.5" max="3" step="0.1" inputmode="decimal" value="1.7" onchange="updateHorizonSetting('eyeHeightM', this.value)">
+                <span class="arch-unit">m</span>
+            </div>
+            <div class="horizon-neighborhood">
+                <div class="horizon-subtitle">Voisinage 3D</div>
+                <div class="horizon-row horizon-address-row">
+                    <label for="horizon-address-input">Adresse</label>
+                    <input id="horizon-address-input" type="search" value="" placeholder="12 rue..." autocomplete="off" list="horizon-address-suggestions">
+                    <datalist id="horizon-address-suggestions"></datalist>
+                </div>
+                <div class="horizon-row">
+                    <label for="horizon-floor-input">Étage</label>
+                    <input id="horizon-floor-input" type="number" min="0" max="40" step="1" inputmode="numeric" value="0" onchange="updateNeighborhoodSetting('floor', this.value)">
+                    <label for="horizon-radius-neighborhood-input">Rayon</label>
+                    <input id="horizon-radius-neighborhood-input" type="number" min="40" max="500" step="10" inputmode="numeric" value="160" onchange="updateNeighborhoodSetting('radiusM', this.value)">
+                    <span class="arch-unit">m</span>
+                </div>
+                <div class="horizon-actions">
+                    <button type="button" onclick="requestDeviceContextForSolarAndNeighborhood()">Position actuelle</button>
+                    <button type="button" onclick="importNeighborhoodBuildings()">Importer</button>
+                    <button type="button" onclick="clearNeighborhoodBuildings()">Effacer immeubles</button>
+                    <button type="button" onclick="importPvgisHorizon()">Horizon réel</button>
+                </div>
+                <label class="horizon-toggle-row">
+                    <input id="horizon-footprints-toggle" type="checkbox" onchange="toggleNeighborhoodFootprints(this.checked)">
+                    <span>Carte au sol des bâtiments</span>
+                </label>
+                <label class="horizon-toggle-row">
+                    <input id="horizon-satellite-toggle" type="checkbox" onchange="updateNeighborhoodSetting('showSatellite', this.checked)">
+                    <span>Photo satellite en fond</span>
+                </label>
+                <label class="horizon-toggle-row">
+                    <input id="horizon-urban-features-toggle" type="checkbox" onchange="updateNeighborhoodSetting('showUrbanFeatures', this.checked)">
+                    <span>Routes et arbres OSM</span>
+                </label>
+                <div class="horizon-support-box">
+                    <div class="horizon-subtitle">Balcon sur bâtiment</div>
+                    <div class="horizon-help">Sélectionne ton bâtiment pour accrocher le dessin à ses murs, ou oriente la grille sur une façade.</div>
+                    <button type="button" onclick="armMyBuildingPick()">Mon bâtiment</button>
+                    <button type="button" onclick="armNeighborhoodGridAlignmentPick()">Orienter la grille</button>
+                    <button type="button" onclick="armBalconyBuildingPlacementPick()">Replacer le balcon</button>
+                    <button type="button" onclick="armNeighborhoodHeightEditPick()">Corriger hauteur</button>
+                    <div id="horizon-support-status" class="horizon-status"></div>
+                </div>
+                <div class="horizon-actions">
+                    <button type="button" onclick="focusNeighborhoodFootprints2D()">Cadrer la carte au sol</button>
+                </div>
+                <div id="horizon-neighborhood-status" class="horizon-status"></div>
+                <div id="horizon-pvgis-status" class="horizon-status"></div>
+            </div>
+            <textarea id="horizon-points-input" spellcheck="false" onchange="updateHorizonPointsFromText(this.value)"></textarea>
+            <div class="horizon-actions">
+                <button type="button" onclick="setSampleHorizon()">Exemple</button>
+                <button type="button" onclick="openHorizonDrawView()">Tracer</button>
+                <button type="button" onclick="clearHorizon()">Effacer</button>
+                <button type="button" class="primary" onclick="applyHorizonFromPanel()">Appliquer</button>
+            </div>
+        </div>
+
+        <div id="arch-panel-2d">
+            <div class="arch-control">
+                <label>H. Mur</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-wall" min="150" max="400" inputmode="numeric" value="250" oninput="updateHeightValue('wall', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control arch-color-control">
+                <label>Couleur du mur</label>
+                <div class="arch-control-input arch-color-input-row">
+                    <div class="color-popover-wrap">
+                        <button class="color-chip-btn" id="arch-color-toggle-wall" type="button" onclick="toggleColorPopover('arch-color-popover-wall')" title="Couleur mur"></button>
+                        <div class="color-popover" id="arch-color-popover-wall">
+                            <input type="color" id="input-wall-color" value="#ffffff" oninput="updateArchColor('wall', this.value)">
+                            <div class="arch-color-palette" data-arch-palette="wall">
+                                <button class="wood-swatch" type="button" title="Enduit ivoire" style="background:#e8ddc8" onclick="setArchColorPreset('wall', '#e8ddc8')"></button>
+                                <button class="wood-swatch" type="button" title="Crépi sable" style="background:#d6c0a0" onclick="setArchColorPreset('wall', '#d6c0a0')"></button>
+                                <button class="wood-swatch" type="button" title="Ocre clair" style="background:#c89b62" onclick="setArchColorPreset('wall', '#c89b62')"></button>
+                                <button class="wood-swatch" type="button" title="Taupe enduit" style="background:#8d7d68" onclick="setArchColorPreset('wall', '#8d7d68')"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-control arch-color-control">
+                <label>Couleur dalle</label>
+                <div class="arch-control-input arch-color-input-row">
+                    <div class="color-popover-wrap">
+                        <button class="color-chip-btn" id="arch-color-toggle-slab" type="button" onclick="toggleColorPopover('arch-color-popover-slab')" title="Couleur dalle"></button>
+                        <div class="color-popover" id="arch-color-popover-slab">
+                            <input type="color" id="input-slab-color" value="#9a9a9a" oninput="updateArchColor('slab', this.value)">
+                            <div class="arch-color-palette" data-arch-palette="slab">
+                                <button class="wood-swatch" type="button" title="Béton clair" style="background:#b8b3aa" onclick="setArchColorPreset('slab', '#b8b3aa')"></button>
+                                <button class="wood-swatch" type="button" title="Pierre beige" style="background:#a89982" onclick="setArchColorPreset('slab', '#a89982')"></button>
+                                <button class="wood-swatch" type="button" title="Gris chaud" style="background:#837f78" onclick="setArchColorPreset('slab', '#837f78')"></button>
+                                <button class="wood-swatch" type="button" title="Anthracite doux" style="background:#45433f" onclick="setArchColorPreset('slab', '#45433f')"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-control arch-color-control">
+                <label>Couleur plafond</label>
+                <div class="arch-control-input arch-color-input-row">
+                    <div class="color-popover-wrap">
+                        <button class="color-chip-btn" id="arch-color-toggle-ceiling" type="button" onclick="toggleColorPopover('arch-color-popover-ceiling')" title="Couleur plafond"></button>
+                        <div class="color-popover" id="arch-color-popover-ceiling">
+                            <input type="color" id="input-ceiling-color" value="#d8d2c4" oninput="updateCeilingColor(this.value)">
+                            <div class="arch-color-palette" data-arch-palette="ceiling">
+                                <button class="wood-swatch" type="button" title="Blanc cassé" style="background:#e6e0d2" onclick="setArchColorPreset('ceiling', '#e6e0d2')"></button>
+                                <button class="wood-swatch" type="button" title="Plâtre beige" style="background:#d3c6b0" onclick="setArchColorPreset('ceiling', '#d3c6b0')"></button>
+                                <button class="wood-swatch" type="button" title="Grège" style="background:#b8aa94" onclick="setArchColorPreset('ceiling', '#b8aa94')"></button>
+                                <button class="wood-swatch" type="button" title="Ombre douce" style="background:#776d60" onclick="setArchColorPreset('ceiling', '#776d60')"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-control arch-color-control">
+                <label>Couleur garde-corps</label>
+                <div class="arch-control-input arch-color-input-row">
+                    <div class="color-popover-wrap">
+                        <button class="color-chip-btn" id="arch-color-toggle-rail" type="button" onclick="toggleColorPopover('arch-color-popover-rail')" title="Couleur garde-corps"></button>
+                        <div class="color-popover" id="arch-color-popover-rail">
+                            <input type="color" id="input-rail-color" value="#c8b89a" oninput="updateArchColor('rail', this.value)">
+                            <div class="arch-color-palette" data-arch-palette="rail">
+                                <button class="wood-swatch" type="button" title="Beige pierre" style="background:#c8b89a" onclick="setArchColorPreset('rail', '#c8b89a')"></button>
+                                <button class="wood-swatch" type="button" title="Fer brun noir" style="background:#2f2b25" onclick="setArchColorPreset('rail', '#2f2b25')"></button>
+                                <button class="wood-swatch" type="button" title="Gris graphite" style="background:#4b4a45" onclick="setArchColorPreset('rail', '#4b4a45')"></button>
+                                <button class="wood-swatch" type="button" title="Bronze sombre" style="background:#5b4936" onclick="setArchColorPreset('rail', '#5b4936')"></button>
+                                <button class="wood-swatch" type="button" title="Pierre foncée" style="background:#6d675d" onclick="setArchColorPreset('rail', '#6d675d')"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Type garde</label>
+                <div class="arch-control-input">
+                    <select id="input-rail-type" onchange="updateRailType(this.value)">
+                        <option value="low-wall">Mur bas</option>
+                        <option value="bars">Barreaux verticaux</option>
+                        <option value="horizontal-rails">Lisses horizontales</option>
+                        <option value="panel">Panneau plein</option>
+                        <option value="glass">Vitré</option>
+                    </select>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Esp. barreaux</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-rail-spacing" min="8" max="30" inputmode="numeric" value="12" oninput="updateRailBarSpacing(this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Fen. bas</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-window-bot" min="20" max="120" inputmode="numeric" value="50" oninput="updateHeightValue('window-bot', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Fen. haut</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-window-top" min="80" max="300" inputmode="numeric" value="225" oninput="updateHeightValue('window-top', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Baie bas</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-glass-bot" min="0" max="200" inputmode="numeric" value="0" oninput="updateHeightValue('glass-bot', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>Baie haut</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-glass-top" min="100" max="300" inputmode="numeric" value="225" oninput="updateHeightValue('glass-top', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-control">
+                <label>H. garde</label>
+                <div class="arch-control-input">
+                    <input type="number" id="input-rail" min="50" max="150" inputmode="numeric" value="100" oninput="updateHeightValue('rail', this.value)">
+                    <span class="arch-unit">cm</span>
+                </div>
+            </div>
+            <div class="arch-actions" style="display:flex;gap:6px;flex-wrap:nowrap;align-items:flex-end;flex:0 0 auto;">
+                <button class="reset-btn btn-with-icon" onclick="resetArchHeights()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M19 9a7 7 0 1 0 2 5"></path><path d="M19 4v5h-5"></path></svg></span><span>Réinitialiser</span></button>
+                <button class="btn-main btn-with-icon" onclick="closeArchPanel()"><span class="icon-wire" aria-hidden="true"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M9 12l2 2 4-4"></path></svg></span><span>OK</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-devis">
+        <div class="modal-content">
+            <h2 style="color:var(--accent)">DEVIS ESTIMATIF</h2>
+            <div id="devis-data"></div>
+            <button class="btn-main" onclick="document.getElementById('modal-devis').style.display='none'">Fermer</button>
+        </div>
+    </div>
+
+    <div id="modal-tech-plan" onclick="if(event.target.id==='modal-tech-plan')closeTechPlanModal()">
+        <div class="tech-plan-content">
+            <div class="tech-plan-header">
+                <div id="modal-tech-plan-title" class="tech-plan-title">Plan technique</div>
+                <div class="tech-plan-actions">
+                    <button class="tool-btn compact" onclick="adjustTechPlanZoom(-0.15)">-</button>
+                    <div id="modal-tech-plan-zoom" class="tech-plan-zoom">100%</div>
+                    <button class="tool-btn compact" onclick="adjustTechPlanZoom(0.15)">+</button>
+                    <button class="tool-btn compact" onclick="resetTechPlanZoom()">Réinitialiser</button>
+                    <button class="tool-btn compact btn-tone-primary" onclick="closeTechPlanModal()">Fermer</button>
+                </div>
+            </div>
+            <div id="modal-tech-plan-viewport" class="tech-plan-viewport">
+                <div id="modal-tech-plan-canvas" class="tech-plan-canvas"></div>
+            </div>
+        </div>
+    </div>
+
+    <input id="project-file-input" type="file" accept="application/json,.json" class="file-input-hidden" onchange="handleProjectFile(event)">
+
+    <div id="download-progress" role="status" aria-live="polite" aria-hidden="true">
+        <div class="download-progress-head">
+            <div id="download-progress-label">Préparation du fichier</div>
+            <div id="download-progress-percent">0%</div>
+        </div>
+        <div class="download-progress-track">
+            <div id="download-progress-bar"></div>
+        </div>
+        <div id="download-progress-status">Initialisation...</div>
+    </div>
+
+    <div id="mobile-startup-dialog" role="dialog" aria-modal="true" aria-labelledby="mobile-startup-title" aria-hidden="true">
+        <div class="pwa-update-card">
+            <div id="mobile-startup-title">Confort sur smartphone</div>
+            <div class="pwa-update-text">La vue 2D est plus simple pour dessiner et placer les éléments sur téléphone. Pour travailler plus confortablement, tourne aussi l'écran en mode paysage.</div>
+            <div class="pwa-update-actions mobile-startup-actions">
+                <button type="button" class="pwa-update-secondary" onclick="dismissMobileStartupPrompt()">Garder cette vue</button>
+                <button type="button" class="pwa-update-primary" onclick="useMobileStartup2D()">Passer en vue 2D</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="device-context-dialog" role="dialog" aria-modal="true" aria-labelledby="device-context-title" aria-hidden="true">
+        <div class="pwa-update-card">
+            <div id="device-context-title">Position et soleil</div>
+            <div class="pwa-update-text">Utilise l'heure, la date et la position de cet appareil pour caler le soleil et importer le voisinage.</div>
+            <div class="pwa-update-actions">
+                <button type="button" class="pwa-update-secondary" onclick="dismissDeviceContextPrompt()">Plus tard</button>
+                <button type="button" class="pwa-update-primary" onclick="useDeviceContextPrompt()">Utiliser ma position</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="device-location-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="device-location-confirm-title" aria-hidden="true">
+        <div class="pwa-update-card">
+            <div id="device-location-confirm-title">Aucune adresse détectée</div>
+            <div id="device-location-confirm-text" class="pwa-update-text">Tu es bien localisé à cette adresse ?</div>
+            <input id="device-location-confirm-input" class="device-location-confirm-input" type="search" autocomplete="street-address" list="horizon-address-suggestions" placeholder="Entre ton adresse" oninput="handleDeviceLocationAddressEdit()">
+            <div class="device-location-floor-row">
+                <label for="device-location-floor-input">Étage</label>
+                <input id="device-location-floor-input" type="number" min="0" max="40" step="1" inputmode="numeric" value="0">
+            </div>
+            <div class="pwa-update-actions">
+                <button type="button" class="pwa-update-secondary" onclick="cancelDeviceLocationConfirmation()">Annuler</button>
+                <button id="device-location-confirm-go" type="button" class="pwa-update-secondary" onclick="importEditedDeviceLocationAddress()">Aller à l'adresse</button>
+                <button id="device-location-confirm-yes" type="button" class="pwa-update-primary" onclick="confirmDetectedDeviceLocation()">Oui, c'est bien ici</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pwa-update-dialog" role="dialog" aria-modal="true" aria-labelledby="pwa-update-title" aria-hidden="true">
+        <div class="pwa-update-card">
+            <div id="pwa-update-title">Nouvelle version disponible</div>
+            <div class="pwa-update-text">Enregistrez votre projet avant d'actualiser pour ne pas perdre les modifications en cours.</div>
+            <div class="pwa-update-actions">
+                <button type="button" class="pwa-update-secondary" onclick="dismissPwaUpdatePrompt()">Plus tard</button>
+                <button type="button" class="pwa-update-warning" onclick="applyPwaUpdateWithoutSaving()">Actualiser sans enregistrer</button>
+                <button type="button" class="pwa-update-primary" onclick="saveProjectAndApplyPwaUpdate()">Enregistrer puis actualiser</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fluidity-spinner" aria-hidden="true">
+        <div class="fluidity-spinner-ring"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="js/00-state-config.js"></script>
+    <script src="js/01-construction-core.js"></script>
+    <script src="js/02-ui-layout-init.js"></script>
+    <script src="js/03-plan2d.js"></script>
+    <script src="js/04-scene3d-horizon.js"></script>
+    <script src="js/05-storage-project.js"></script>
+    <script src="js/06-architecture-solar.js"></script>
+    <script src="js/07-jardinieres-ui.js"></script>
+    <script src="js/08-placement-objects.js"></script>
+    <script src="js/09-jardiniere-rendering.js"></script>
+    <script src="js/10-devis-chantier.js"></script>
+    <script src="js/11-boot.js"></script>
+    <script src="js/12-expert-advisor.js"></script>
+    <script src="js/13-layout-advisor.js"></script>
+</body>
+</html>

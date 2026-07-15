@@ -1,0 +1,19 @@
+{
+  "name": "Capteurs et emetteurs",
+  "short_name": "Capteurs",
+  "description": "PWA pour tester les capteurs et emetteurs disponibles sur l'appareil.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

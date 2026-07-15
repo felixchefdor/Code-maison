@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Moral">
+  <rect width="512" height="512" rx="96" fill="#243b35"/>
+  <path d="M137 287c37 70 116 100 188 67 50-23 82-70 85-122-42 64-133 66-183 12-28-30-34-70-16-108-71 23-108 89-74 151Z" fill="#fbf8ef"/>
+  <path d="M167 321c54 42 130 43 184 1" fill="none" stroke="#d98c76" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="346" cy="151" r="24" fill="#f1c57d"/>
+</svg>

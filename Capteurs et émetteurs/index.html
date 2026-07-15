@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="color-scheme" content="dark light">
+  <title>Capteurs et emetteurs</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="colorEmitter" class="color-emitter" aria-hidden="true">
+    <button id="closeColorEmitterBtn" class="color-close" aria-label="Fermer la couleur">×</button>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">PWA locale</p>
+      <h1>Capteurs et emetteurs</h1>
+    </div>
+    <button id="installBtn" class="ghost" hidden>Installer</button>
+  </header>
+
+  <main>
+    <section class="status-strip" aria-label="Etat general">
+      <article>
+        <span>Contexte</span>
+        <strong id="secureStatus">Verification...</strong>
+      </article>
+      <article>
+        <span>Connexion</span>
+        <strong id="networkStatus">-</strong>
+      </article>
+      <article>
+        <span>Batterie</span>
+        <strong id="batteryStatus">-</strong>
+      </article>
+      <article>
+        <span>Appareil</span>
+        <strong id="deviceStatus">-</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Recevoir</p>
+          <h2>Capteurs</h2>
+        </div>
+        <button id="refreshPermissionsBtn" class="ghost">Permissions</button>
+      </div>
+      <div id="sensorGrid" class="grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Agir</p>
+          <h2>Emetteurs</h2>
+        </div>
+        <button id="stopAllBtn" class="danger">Stop</button>
+      </div>
+      <div id="emitterGrid" class="grid"></div>
+    </section>
+
+    <section class="panel permissions-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Navigateur</p>
+          <h2>Etat des permissions</h2>
+        </div>
+      </div>
+      <div id="permissionList" class="permission-list"></div>
+    </section>
+  </main>
+
+  <video id="cameraPreview" playsinline muted></video>
+  <script src="app.js" defer></script>
+</body>
+</html>

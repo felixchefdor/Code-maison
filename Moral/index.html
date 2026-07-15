@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#243b35">
+  <meta name="color-scheme" content="light">
+  <title>Moral</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-top">
+    <div>
+      <p class="eyebrow">Petit appui</p>
+      <h1>Moral</h1>
+    </div>
+    <button id="installBtn" class="icon-btn" hidden aria-label="Installer l'application">+</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Point de depart">
+      <img src="hero.png" alt="">
+      <div class="hero-content">
+        <p id="todayLine">On commence petit.</p>
+        <div class="mood-row" aria-label="Etat du moment">
+          <button class="mood-btn" data-mood="dur">Dur</button>
+          <button class="mood-btn" data-mood="flou">Flou</button>
+          <button class="mood-btn" data-mood="fatigue">Fatigue</button>
+          <button class="mood-btn" data-mood="mieux">Mieux</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-actions" aria-label="Actions rapides">
+      <button id="breatheBtn" class="action primary">
+        <span>Respirer</span>
+        <strong>60 s</strong>
+      </button>
+      <button id="resetBtn" class="action">
+        <span>Sortir de la boucle</span>
+        <strong>1 geste</strong>
+      </button>
+      <button id="comfortBtn" class="action">
+        <span>Se remettre au sol</span>
+        <strong>3 choses</strong>
+      </button>
+    </section>
+
+    <section id="focusPanel" class="panel focus-panel">
+      <div>
+        <p class="eyebrow">Maintenant</p>
+        <h2 id="focusTitle">Une petite marche avant</h2>
+      </div>
+      <p id="focusText">Choisis une action. Une seule suffit.</p>
+      <div class="timer" aria-live="polite">
+        <span id="timerValue">01:00</span>
+        <small id="timerCue">pret</small>
+      </div>
+      <div class="button-row">
+        <button id="doneBtn">Fait</button>
+        <button id="againBtn" class="ghost">Autre idee</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Phrase de secours</p>
+          <h2>A garder sous la main</h2>
+        </div>
+        <button id="saveNoteBtn" class="ghost">Garder</button>
+      </div>
+      <textarea id="noteInput" rows="4" maxlength="220" placeholder="Ex : je n'ai pas besoin de tout regler ce soir."></textarea>
+      <p id="savedNote" class="saved-note"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Mini preuves</p>
+          <h2>Ce qui a aide</h2>
+        </div>
+        <button id="clearWinsBtn" class="ghost">Vider</button>
+      </div>
+      <ul id="winsList" class="wins-list"></ul>
+    </section>
+
+    <section class="panel urgent">
+      <div>
+        <p class="eyebrow">Si ca devient dangereux</p>
+        <h2>Ne reste pas seul avec ca</h2>
+      </div>
+      <p>Appelle quelqu'un tout de suite, ou contacte le 3114 si tu es en detresse.</p>
+      <div class="button-row">
+        <a class="call-btn" href="tel:3114?oai_link_source=model_response_hotline">Appeler 3114</a>
+        <a class="ghost link-btn" href="https://3114.fr/?oai_link_source=model_response_hotline">Site 3114</a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-tabs" aria-label="Raccourcis">
+    <button data-jump="focusPanel">Action</button>
+    <button data-jump="noteInput">Phrase</button>
+    <button data-jump="winsList">Preuves</button>
+  </nav>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
